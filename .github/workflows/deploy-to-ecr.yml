@@ -5,7 +5,7 @@ on:
 
 jobs:
   deploy-to-ecr:
-    name: Build Image
+    name: Deploy to ECR
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -35,7 +35,11 @@ jobs:
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
   deploy-to-aws:
-    needs: deploy-to-ecr
+    name: Deploy to AWS
+    defaults:
+      run:
+        working-directory: .
+    # needs: deploy-to-ecr
     runs-on: ubuntu-latest
     steps:
     - name: Deploy Terraform
