@@ -1,10 +1,10 @@
-name: Deploy to ECR
+name: Deploy
 on:
   push:
     branches: [ main ]
 
 jobs:
-  build:
+  deploy-to-ecr:
     name: Build Image
     runs-on: ubuntu-latest
     defaults:
@@ -34,7 +34,10 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
+  deploy-to-aws:
+    needs: deploy-to-ecr
+    runs-on: ubuntu-latest
+    steps:
     - name: Deploy Terraform
       uses: hashicorp/setup-terraform@v2
       with:
