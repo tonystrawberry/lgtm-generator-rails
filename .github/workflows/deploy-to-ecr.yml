@@ -46,4 +46,4 @@ jobs:
     - name: Terraform Apply
       env:
         IMAGE_TAG: ${{ github.sha }}
-      run: terraform apply --var="tag=$IMAGE_TAG" auto-approve
+      run: terraform apply --var="tag=$IMAGE_TAG" -auto-approve
