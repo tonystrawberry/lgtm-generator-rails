@@ -34,3 +34,16 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+    - name: Deploy Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.4.6
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Apply
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+      run: terraform apply --var="tag=$IMAGE_TAG" auto-approve

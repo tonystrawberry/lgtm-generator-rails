@@ -15,3 +15,8 @@ variable "domain" {
   type        = string
   default     = "tonystrawberry.codes"
 }
+
+variable "tag" {
+  description = "The tag to use for the Docker image"
+  type        = string
+}
