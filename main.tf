@@ -61,6 +61,11 @@ resource "aws_iam_policy" "aws_iam_policy" {
     EOF
 }
 
+resource "aws_iam_role_policy_attachment" "aws_iam_role_policy_attachment" {
+  role       = aws_iam_role.aws_iam_role.name
+  policy_arn = aws_iam_policy.aws_iam_policy.arn
+}
+
 resource "aws_dynamodb_table" "aws_dynamodb_table" {
   name           = "lgtm-tonystrawberry-codes"
   billing_mode   = "PAY_PER_REQUEST"

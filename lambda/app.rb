@@ -42,7 +42,6 @@ module LambdaFunction
       # Parse the JSON response
       json_data = JSON.parse(response.body)
 
-      puts "[#process] Parsed response from Unsplash API: #{json_data}"
 
       results = json_data["results"]
       results.each do |result|
@@ -109,10 +108,10 @@ module LambdaFunction
             'url' => url,
             's3_key' => "lgtm/#{id}.jpg",
             'keyword' => event['keyword'],
-            'created_at' => Time.now.to_i
+            'status' => "processed",
+            'created_at' => Time.now.to_i.to_s
           }
         })
-
       end
 
       { "success": true }
