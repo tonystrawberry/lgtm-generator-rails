@@ -114,7 +114,7 @@ module LambdaFunction
           draw.gravity = Magick::CenterGravity
 
           # Annotate the image with the provided text
-          gif.each do |frame|
+          img.each do |frame|
             frame.annotate(draw, 0, 0, 0, 40, "LGTM") { |options|
               options.fill = "white"
               options.font_weight = 700
