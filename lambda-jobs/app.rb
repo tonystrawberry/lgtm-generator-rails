@@ -60,7 +60,7 @@ module LambdaFunction
                             {
                               'id' => result["id"],
                               'url' => result["images"]["original"]["url"],
-                              'source' => 'giphy'
+                              'source' => 'giphy',
                             }
                           end
                         when 'unsplash'
@@ -119,25 +119,25 @@ module LambdaFunction
           # Create a drawing object
           draw = Magick::Draw.new
           draw.font_family = "Georgia"
-          draw.pointsize = 200
+          draw.pointsize = 100
           draw.gravity = Magick::CenterGravity
 
           # Annotate the image with the provided text
           img.each do |frame|
-            frame.annotate(draw, 0, 0, 0, 40, "LGTM") { |options|
+            frame.annotate(draw, 0, 0, 0, 60, "LGTM") { |options|
               options.fill = "white"
-              options.font_weight = 700
+              options.font_weight = 350
             }
           end
 
           draw = Magick::Draw.new
           draw.font_family = "Georgia"
-          draw.pointsize = 50
+          draw.pointsize = 25
           draw.gravity = Magick::CenterGravity
           draw.font_stretch = Magick::UltraExpandedStretch
 
           img.each do |frame|
-            frame.annotate(draw, 0, 0, 0, 150, "Looks Great To Me") { |options|
+            frame.annotate(draw, 0, 0, 0, 115, "Looks Great To Me") { |options|
               options.fill = "white"
             }
           end
