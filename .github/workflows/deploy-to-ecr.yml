@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./lambda
+        working-directory: ./lambda-jobs
 
     steps:
     - name: Check out code
@@ -62,4 +62,6 @@ jobs:
     - name: Terraform Apply
       env:
         IMAGE_TAG: ${{ github.sha }}
-      run: terraform apply --var="tag=$IMAGE_TAG" -auto-approve
+        GIPHY_API_KEY: ${{ secrets.GIPHY_API_KEY }}
+        UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
+      run: terraform apply --var="tag=$IMAGE_TAG" --var="giphy_api_key=$GIPHY_API_KEY" --var=unsplash_api_key=$UNSPLASH_API_KEY" -auto-approve

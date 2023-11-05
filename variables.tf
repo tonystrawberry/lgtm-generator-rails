@@ -20,3 +20,13 @@ variable "tag" {
   description = "The tag to use for the Docker image"
   type        = string
 }
+
+variable "giphy_api_key" {
+  description = "The Giphy API key"
+  type        = string
+}
+
+variable "unsplash_api_key" {
+  description = "The Unsplash API key"
+  type        = string
+}
