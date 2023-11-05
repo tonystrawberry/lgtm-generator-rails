@@ -64,4 +64,4 @@ jobs:
         IMAGE_TAG: ${{ github.sha }}
         GIPHY_API_KEY: ${{ secrets.GIPHY_API_KEY }}
         UNSPLASH_API_KEY: ${{ secrets.UNSPLASH_API_KEY }}
-      run: terraform apply --var="tag=$IMAGE_TAG" --var="giphy_api_key=$GIPHY_API_KEY" --var=unsplash_api_key=$UNSPLASH_API_KEY" -auto-approve
+      run: terraform apply --var="tag=$IMAGE_TAG" --var="giphy_api_key=$GIPHY_API_KEY" --var="unsplash_api_key=$UNSPLASH_API_KEY" -auto-approve

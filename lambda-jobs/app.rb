@@ -40,7 +40,7 @@ module LambdaFunction
       # Send the request and get the response
       response = http.request(request)
 
-      puts "[#process] Received response from Unsplash API: #{response}"
+      puts "[#process] Received response from API: #{response}"
 
       # Check if the response is successful (HTTP status 200)
       if !response.is_a?(Net::HTTPSuccess)
@@ -48,7 +48,7 @@ module LambdaFunction
         return
       end
 
-      puts "[#process] Parsing response from Unsplash API"
+      puts "[#process] Parsing response from API"
 
       formatted_results = case event['source']
                         when 'giphy'
@@ -80,8 +80,6 @@ module LambdaFunction
                           puts "[#process] Error: Invalid source"
                           return { "success": false }
                         end
-
-
 
       formatted_results.each do |result|
         id = result["id"]
