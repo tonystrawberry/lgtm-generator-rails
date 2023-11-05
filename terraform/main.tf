@@ -1,3 +1,5 @@
+## TODO: divide all the Terraform resources into modules
+
 resource "aws_ecr_repository" "aws_ecr_repository" {
   name = "lgtm-tonystrawberry-codes"
 }
@@ -350,4 +352,36 @@ data "aws_iam_policy_document" "lgtm_api_gateway_aws_iam_policy_document" {
       identifiers = ["apigateway.amazonaws.com"]
     }
   }
+}
+
+
+################################
+# CloudWatch Event
+################################
+
+resource "aws_cloudwatch_event_rule" "lgtm_job_aws_cloudwatch_event_rule" {
+  name        = "lgtm-tonystrawberry-codes-job"
+  description = "EventBridge rule to trigger `lgtm-tonystrawberry-codes-job` Lambda function every hour"
+  schedule_expression = "cron(0 * * * ? *)"
+}
+
+resource "aws_cloudwatch_event_target" "lgtm_job_aws_cloudwatch_event_target" {
+  rule      = aws_cloudwatch_event_rule.lgtm_job_aws_cloudwatch_event_rule.name
+  arn       = aws_lambda_function.lgtm_job_aws_lambda_function.arn
+  target_id = "lgtm-tonystrawberry-codes-job"
+
+  input = <<JSON
+{
+  "keyword": "lgtm",
+  "source": "giphy"
+}
+JSON
+}
+
+resource "aws_lambda_permission" "lgtm_job_aws_lambda_permission" {
+  statement_id  = "AllowExecutionFromEventBridge"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lgtm_job_aws_lambda_function.function_name
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.lgtm_job_aws_cloudwatch_event_rule.arn
 }

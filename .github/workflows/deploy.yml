@@ -4,6 +4,7 @@ on:
     branches: [ main ]
 
 jobs:
+  # Deploy the Lambda (Job) Docker Image to ECR
   deploy-to-ecr:
     name: Deploy to ECR
     runs-on: ubuntu-latest
@@ -34,12 +35,14 @@ jobs:
       run: |
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+
+  # Deploy all the necessary AWS resources using Terraform
   deploy-to-aws:
     name: Deploy to AWS
     defaults:
       run:
-        working-directory: .
-    needs: deploy-to-ecr
+        working-directory: ./terraform
+    needs: deploy-to-ecr # Wait for the deploy-to-ecr job to finish because we need the Docker image tag
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
