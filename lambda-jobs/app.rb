@@ -22,7 +22,7 @@ module LambdaFunction
       when 'giphy'
         # Get random GIFs from Giphy API
         # URL: https://api.giphy.com/v1/gifs/search?api_key=&q=lgtm&limit=50&offset=0&rating=g&lang=en&bundle=messaging_non_clips
-        URI("https://api.giphy.com/v1/gifs/search?api_key=#{ENV["GIPHY_API_KEY"]}&q=#{event['keyword']}&limit=20&offset=0&rating=g&lang=en&bundle=messaging_non_clips&sort=newest")
+        URI("https://api.giphy.com/v1/gifs/search?api_key=#{ENV["GIPHY_API_KEY"]}&q=#{event['keyword']}&limit=20&offset=0&rating=g&lang=en&bundle=messaging_non_clips&sort=relevant")
       else
         puts "[#process] Error: Invalid source"
         return { "success": false }
@@ -87,18 +87,18 @@ module LambdaFunction
         source = result["source"]
 
         # Check if the image is already processed before (in DynamoDB)
-        # response = dynamodb.get_item({
-        #   table_name: "lgtm-tonystrawberry-codes",
-        #   key: {
-        #     'id' => id,
-        #     'source' => source
-        #   }
-        # })
+        response = dynamodb.get_item({
+          table_name: "lgtm-tonystrawberry-codes",
+          key: {
+            'id' => id,
+            'source' => source
+          }
+        })
 
-        # if !response.item.nil?
-        #   puts "[#process] Image #{id} is already processed before, skipping..."
-        #   next
-        # end
+        if !response.item.nil?
+          puts "[#process] Image #{id} is already processed before, skipping..."
+          next
+        end
 
         puts "[#process] Reading image from URL: #{url}"
 
@@ -183,7 +183,8 @@ module LambdaFunction
         s3.put_object({
           bucket: "lgtm-tonystrawberry-codes",
           key: "lgtm/#{id}.#{image_type}",
-          body: img.to_blob
+          body: img.to_blob,
+          content_type: "image/#{image_type}"
         })
 
         puts "[#process] Saving image info to DynamoDB"

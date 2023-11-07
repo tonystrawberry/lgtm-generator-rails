@@ -7,29 +7,15 @@ require 'fastimage'
 
 include Magick
 
+# `local` mode will save the images to the local filesystem instead of uploading them to S3
+mode = ARGV[0]
+
 dynamodb = Aws::DynamoDB::Client.new(region: 'ap-northeast-1')
 s3 = Aws::S3::Client.new(region: 'ap-northeast-1')
 
 keywords = [
-  "lgtm",
-  "funny",
   "good job",
-  "congratulations",
-  "well done",
-  "nice",
-  "great",
-  "awesome",
-  "amazing",
-  "bravo",
-  "outstanding",
-  "impressive",
-  "exceptional",
-  "superb",
-  "splendid",
-  "marvelous",
-  "terrific",
-  "phenomenal",
-  "stellar"
+  "lgtm"
 ]
 
 offset = 0
@@ -39,7 +25,7 @@ while offset < 5000 do
   images = []
 
   keywords.each do |keyword|
-    url = URI("https://api.giphy.com/v1/gifs/search?api_key=#{ENV["GIPHY_API_KEY"]}&q=#{keyword}&limit=#{limit}&offset=#{offset}&rating=g&lang=en&bundle=messaging_non_clips&sort=newest")
+    url = URI("https://api.giphy.com/v1/gifs/search?api_key=#{ENV["GIPHY_API_KEY"]}&q=#{keyword}&limit=#{limit}&offset=#{offset}&rating=g&lang=en&bundle=messaging_non_clips&sort=relevant")
 
     # Create an HTTP client
     http = Net::HTTP.new(url.host, url.port)
@@ -87,18 +73,20 @@ while offset < 5000 do
     source = image["source"]
     keyword = image["keyword"]
 
-    # Check if the image is already processed before (in DynamoDB)
-    response = dynamodb.get_item({
-      table_name: "lgtm-tonystrawberry-codes",
-      key: {
-        'id' => id,
-        'source' => source
-      }
-    })
+    unless mode == "local"
+      # Check if the image is already processed before (in DynamoDB)
+      response = dynamodb.get_item({
+        table_name: "lgtm-tonystrawberry-codes",
+        key: {
+          'id' => id,
+          'source' => source
+        }
+      })
 
-    if !response.item.nil?
-      puts "[#process] Image #{id} is already processed before, skipping..."
-      next
+      if !response.item.nil?
+        puts "[#process] Image #{id} is already processed before, skipping..."
+        next
+      end
     end
 
     puts "[#process] Reading image from URL: #{url}"
@@ -175,12 +163,20 @@ while offset < 5000 do
       next
     end
 
+    if mode == "local"
+      # Save the image to the local filesystem
+      img.write("outputs/#{id}.#{image_type}")
+      next
+    end
+
+
     # Upload the image to S3
     puts "[#process] Uploading image to S3"
     s3.put_object({
       bucket: "lgtm-tonystrawberry-codes",
       key: "lgtm/#{id}.#{image_type}",
-      body: img.to_blob
+      body: img.to_blob,
+      content_type: "image/#{image_type}"
     })
 
     puts "[#process] Saving image info to DynamoDB"
