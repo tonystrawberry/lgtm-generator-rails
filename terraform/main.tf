@@ -1,7 +1,7 @@
 module "api-gateway" {
   source = "./modules/api-gateway"
 
-  aws_lambda_function_invoke_arn = module.lambda.aws_lambda_function_invoke_arn
+  lgtm_api_aws_lambda_function_invoke_arn = module.lambda.lgtm_api_aws_lambda_function_invoke_arn
 }
 
 module "cloudfront" {
@@ -14,8 +14,8 @@ module "cloudfront" {
 module "eventbridge" {
   source = "./modules/eventbridge"
 
-  aws_lambda_function_arn = module.lambda.aws_lambda_function_arn
-  aws_lambda_function_name = module.lambda.aws_lambda_function_name
+  lgtm_job_aws_lambda_function_arn = module.lambda.lgtm_job_aws_lambda_function_arn
+  lgtm_job_aws_lambda_function_name = module.lambda.lgtm_job_aws_lambda_function_name
 }
 
 module "ecr" {

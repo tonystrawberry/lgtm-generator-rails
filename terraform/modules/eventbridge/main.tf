@@ -8,7 +8,7 @@ resource "aws_cloudwatch_event_rule" "lgtm_job_aws_cloudwatch_event_rule" {
 # Create a target for the EventBridge rule to trigger the Lambda function with a payload
 resource "aws_cloudwatch_event_target" "lgtm_job_aws_cloudwatch_event_target" {
   rule      = aws_cloudwatch_event_rule.lgtm_job_aws_cloudwatch_event_rule.name
-  arn       = var.aws_lambda_function_arn
+  arn       = var.lgtm_job_aws_lambda_function_arn
   target_id = "lgtm-tonystrawberry-codes-job"
 
   input = <<JSON
@@ -23,7 +23,7 @@ JSON
 resource "aws_lambda_permission" "lgtm_job_aws_lambda_permission" {
   statement_id  = "AllowExecutionFromEventBridge"
   action        = "lambda:InvokeFunction"
-  function_name = var.aws_lambda_function_name # aws_lambda_function.lgtm_job_aws_lambda_function.function_name
+  function_name = var.lgtm_job_aws_lambda_function_name # aws_lambda_function.lgtm_job_aws_lambda_function.function_name
   principal     = "events.amazonaws.com"
   source_arn    = aws_cloudwatch_event_rule.lgtm_job_aws_cloudwatch_event_rule.arn
 }

@@ -33,7 +33,7 @@ terraform.rc
 .env
 
 # Ignore the output folder (only used for local testing)
-lambda-jobs/output
+lambda-jobs/outputs
 
 # Ignore .terraform directories
 **/.terraform/*

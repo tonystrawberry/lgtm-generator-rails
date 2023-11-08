@@ -15,7 +15,7 @@ resource "aws_api_gateway_rest_api" "lgtm_api_aws_api_gateway_rest_api" {
             httpMethod           = "POST"
             payloadFormatVersion = "1.0"
             type                 = "AWS_PROXY"
-            uri                  = var.aws_lambda_function_invoke_arn # aws_lambda_function.lgtm_api_aws_lambda_function.invoke_arn
+            uri                  = var.lgtm_api_aws_lambda_function_invoke_arn # aws_lambda_function.lgtm_api_aws_lambda_function.invoke_arn
             credentials          = aws_iam_role.lgtm_api_gateway_aws_iam_role.arn
           }
         }
