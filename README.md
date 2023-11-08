@@ -54,3 +54,6 @@ The application is deployed to AWS with Terraform via Github Actions. The Github
 
 1. First, we deploy to ECR the Docker image for the `lambda-jobs` Lambda function (the one that is used to fetch the latest LGTM images from the Giphy API and then do some image processing to generate the thumbnail and preview images).
 2. Then, we deploy the infrastructure with Terraform and use the Docker image from ECR as the Lambda function source code. It will also deploy the Cloudfront CDN with S3, API Gateway + Lambda, DynamoDB, and EventBridge.
+
+## 🧐 Related Links
+- https://stackoverflow.com/questions/77446420/how-to-give-permission-to-a-local-running-docker-container-lambda-function-acces?noredirect=1#comment136533460_77446420
