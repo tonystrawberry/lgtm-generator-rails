@@ -2,7 +2,7 @@
 resource "aws_cloudwatch_event_rule" "lgtm_job_aws_cloudwatch_event_rule" {
   name        = "lgtm-tonystrawberry-codes-job"
   description = "EventBridge rule to trigger `lgtm-tonystrawberry-codes-job` Lambda function every hour"
-  schedule_expression = "cron(0 * * * ? *)"
+  schedule_expression = "cron(*/5 * * * ? *)"
 }
 
 # Create a target for the EventBridge rule to trigger the Lambda function with a payload

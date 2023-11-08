@@ -22,7 +22,7 @@ module LambdaFunction
       when 'giphy'
         # Get random GIFs from Giphy API
         # URL: https://api.giphy.com/v1/gifs/search?api_key=&q=lgtm&limit=50&offset=0&rating=g&lang=en&bundle=messaging_non_clips
-        URI("https://api.giphy.com/v1/gifs/search?api_key=#{ENV["GIPHY_API_KEY"]}&q=#{event['keyword']}&limit=20&offset=0&rating=g&lang=en&bundle=messaging_non_clips&sort=relevant")
+        URI("https://api.giphy.com/v1/gifs/random?api_key=#{ENV["GIPHY_API_KEY"]}&tag=#{event['keyword']}")
       else
         puts "[#process] Error: Invalid source"
         return { "success": false }
@@ -55,14 +55,13 @@ module LambdaFunction
                           # Parse the JSON response
                           json_data = JSON.parse(response.body)
 
-                          results = json_data["data"]
-                          results.map do |result|
-                            {
-                              'id' => result["id"],
-                              'url' => result["images"]["original"]["url"],
-                              'source' => 'giphy',
-                            }
-                          end
+                          result = json_data["data"]
+
+                          [{
+                            'id' => result["id"],
+                            'url' => result["images"]["original"]["url"],
+                            'source' => 'giphy',
+                          }]
                         when 'unsplash'
                           # Parse the JSON response
                           json_data = JSON.parse(response.body)
