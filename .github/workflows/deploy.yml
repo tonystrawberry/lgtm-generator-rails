@@ -69,11 +69,11 @@ jobs:
         bundler-cache: true
 
     - name: Install dependencies in `lambda-api`
-      working-directory: ./lambda-api
+      working-directory: ./terraform/lambda-api
       run: bundle install --path vendor/bundle
 
     - name: Install dependencies in `lambda-jobs`
-      working-directory: ./lambda-jobs
+      working-directory: ./terraform/lambda-jobs
       run: bundle install --path vendor/bundle
 
     - name: Terraform Apply
