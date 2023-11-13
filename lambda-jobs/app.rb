@@ -12,9 +12,9 @@ module LambdaFunction
   class Handler
     def self.process(event:, context:)
       # Create a DynamoDB client
-      dynamodb = Aws::DynamoDB::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
-      s3 = Aws::S3::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
-      rekognition = Aws::Rekognition::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
+      dynamodb = Aws::DynamoDB::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"], ENV["AWS_SESSION_TOKEN"]))
+      s3 = Aws::S3::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"], ENV["AWS_SESSION_TOKEN"]))
+      rekognition = Aws::Rekognition::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"], ENV["AWS_SESSION_TOKEN"]))
 
       url = case event['source']
       when 'unsplash'
