@@ -4,6 +4,7 @@ require 'json'
 require 'aws-sdk-dynamodb'
 require 'aws-sdk-s3'
 require 'fastimage'
+require 'aws-sdk-rekognition'
 
 include Magick
 
@@ -102,7 +103,7 @@ module LambdaFunction
         puts "[#process] Reading image from URL: #{url}"
 
         image_type = FastImage.type(url)
-        img = case image_type
+        img, original_img_first_frame = case image_type
         when :gif
           img = Magick::ImageList.new(url)
 
@@ -141,7 +142,7 @@ module LambdaFunction
             }
           end
 
-          img
+          [img, img.first]
         when :jpeg, :png, :jpg
           # Read the image
           img = Magick::Image.read(url).first
@@ -171,13 +172,13 @@ module LambdaFunction
             options.fill = "white"
           }
 
-          img
+          [img, img]
         else
           puts "[#process] Error: Invalid image type #{image_type}. Skipping..."
           next
         end
 
-        # Upload the image to S3
+        # Upload the images (original and processed) to S3
         puts "[#process] Uploading image to S3"
         s3.put_object({
           bucket: "lgtm-tonystrawberry-codes",
@@ -185,6 +186,33 @@ module LambdaFunction
           body: img.to_blob,
           content_type: "image/#{image_type}"
         })
+
+        s3.put_object({
+          bucket: "lgtm-tonystrawberry-codes",
+          key: "lgtm/#{id}-original.jpg",
+          body: original_img_first_frame.to_blob,
+          content_type: "image/jpeg"
+        })
+
+        # Analyze the image using Rekognition
+        puts "[#process] Analyzing image using Rekognition"
+        rekognition = Aws::Rekognition::Client.new(region: 'ap-northeast-1')
+
+        response = rekognition.detect_labels({
+          image: {
+            s3_object: {
+              bucket: "lgtm-tonystrawberry-codes",
+              name: "lgtm/#{id}-original.jpg"
+            }
+          },
+        })
+
+        # Get the labels from the response (whose confidence is greater than 80%)
+        labels = response.labels.map do |label|
+          if label.confidence > 80
+            label.name
+          end
+        end.compact
 
         puts "[#process] Saving image info to DynamoDB"
         # Save the image info to DynamoDB
@@ -196,6 +224,7 @@ module LambdaFunction
             'url' => url,
             's3_key' => "lgtm/#{id}.#{image_type}",
             'keyword' => event['keyword'],
+            'labels' => labels,
             'status' => "processed",
             'created_at' => Time.now.to_i.to_s
           }

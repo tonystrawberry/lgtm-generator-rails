@@ -37,3 +37,9 @@ module "storage" {
 
   aws_cloudfront_distribution_arn = module.cloudfront.aws_cloudfront_distribution_arn
 }
+
+module "opensearch" {
+  source = "./modules/opensearch"
+
+  dynamo_db_stream_arn = module.storage.dynamo_db_stream_arn
+}

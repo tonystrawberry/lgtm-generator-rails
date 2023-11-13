@@ -4,6 +4,10 @@ resource "aws_dynamodb_table" "aws_dynamodb_table" {
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "id"
   range_key      = "source"
+
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+  stream_enabled = true
+
   attribute {
     name = "id"
     type = "S"
