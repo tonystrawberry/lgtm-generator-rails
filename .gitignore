@@ -37,3 +37,6 @@ lambda-jobs/outputs
 
 # Ignore .terraform directories
 **/.terraform/*
+
+# Ignore gems directory
+**/vendor/bundle

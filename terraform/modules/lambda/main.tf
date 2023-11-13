@@ -101,6 +101,7 @@ resource "aws_lambda_function" "lgtm_api_aws_lambda_function" {
   filename         = data.archive_file.lgtm_api_archive_file.output_path
   source_code_hash = filebase64sha256(data.archive_file.lgtm_api_archive_file.output_path)
   role = aws_iam_role.lgtm_api_aws_iam_role.arn
+  timeout          = 30 # 30 seconds
 
   environment {
     variables = {

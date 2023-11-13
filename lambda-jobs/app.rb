@@ -4,6 +4,7 @@ require 'json'
 require 'aws-sdk-dynamodb'
 require 'aws-sdk-s3'
 require 'fastimage'
+require 'aws-sdk-rekognition'
 
 include Magick
 
@@ -11,8 +12,9 @@ module LambdaFunction
   class Handler
     def self.process(event:, context:)
       # Create a DynamoDB client
-      dynamodb = Aws::DynamoDB::Client.new(region: 'ap-northeast-1')
-      s3 = Aws::S3::Client.new(region: 'ap-northeast-1')
+      dynamodb = Aws::DynamoDB::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
+      s3 = Aws::S3::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
+      rekognition = Aws::Rekognition::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
 
       url = case event['source']
       when 'unsplash'
@@ -80,6 +82,8 @@ module LambdaFunction
                           return { "success": false }
                         end
 
+      puts "[#process] Formatted results: #{formatted_results}"
+
       formatted_results.each do |result|
         id = result["id"]
         url = result["url"]
@@ -102,7 +106,7 @@ module LambdaFunction
         puts "[#process] Reading image from URL: #{url}"
 
         image_type = FastImage.type(url)
-        img = case image_type
+        img, original_img_first_frame, unedited_image_type = case image_type
         when :gif
           img = Magick::ImageList.new(url)
 
@@ -141,7 +145,17 @@ module LambdaFunction
             }
           end
 
-          img
+          # Get the first frame of the GIF
+          original_img_first_frame = Magick::ImageList.new(url).first
+          original_img_first_frame.resize_to_fill!(400, 300)
+          original_img_first_frame.format = "JPEG"
+
+          tempfile = Tempfile.new
+          original_img_first_frame.write(tempfile.path)
+
+          unedited_image_type = FastImage.type(tempfile.path)
+
+          [img, original_img_first_frame, unedited_image_type]
         when :jpeg, :png, :jpg
           # Read the image
           img = Magick::Image.read(url).first
@@ -171,13 +185,17 @@ module LambdaFunction
             options.fill = "white"
           }
 
-          img
+          # Get the image unedited
+          unedited_img = Magick::Image.read(url).first
+          unedited_img.resize_to_fill!(400, 300)
+
+          [img, unedited_img, image_type]
         else
           puts "[#process] Error: Invalid image type #{image_type}. Skipping..."
           next
         end
 
-        # Upload the image to S3
+        # Upload the images (original and processed) to S3
         puts "[#process] Uploading image to S3"
         s3.put_object({
           bucket: "lgtm-tonystrawberry-codes",
@@ -185,6 +203,36 @@ module LambdaFunction
           body: img.to_blob,
           content_type: "image/#{image_type}"
         })
+
+        s3.put_object({
+          bucket: "lgtm-tonystrawberry-codes",
+          key: "lgtm/#{id}-original.jpg",
+          body: original_img_first_frame.to_blob,
+          content_type: "image/#{unedited_image_type}"
+        })
+
+        puts "[#process] Image #{id} uploaded to S3"
+
+        # Analyze the image using Rekognition
+        puts "[#process] Analyzing image using Rekognition"
+
+        response = rekognition.detect_labels({
+          image: {
+            s3_object: {
+              bucket: "lgtm-tonystrawberry-codes",
+              name: "lgtm/#{id}-original.jpg"
+            }
+          },
+        })
+
+        puts "[#process] Labels: #{response.labels}"
+
+        # Get the labels from the response (whose confidence is greater than 80%)
+        labels = response.labels.map do |label|
+          if label.confidence > 80
+            label.name
+          end
+        end.compact
 
         puts "[#process] Saving image info to DynamoDB"
         # Save the image info to DynamoDB
@@ -196,6 +244,7 @@ module LambdaFunction
             'url' => url,
             's3_key' => "lgtm/#{id}.#{image_type}",
             'keyword' => event['keyword'],
+            'labels' => labels,
             'status' => "processed",
             'created_at' => Time.now.to_i.to_s
           }
