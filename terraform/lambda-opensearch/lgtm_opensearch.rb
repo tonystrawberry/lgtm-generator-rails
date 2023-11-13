@@ -24,11 +24,6 @@ class OpenSearchClient
       request = Net::HTTP::Post.new(uri)
     end
 
-    puts "[#OpenSearchClient.request] Sending request to URL: #{url}"
-    puts "[#OpenSearchClient.request] ENV['AWS_ACCESS_KEY_ID']: #{ENV['AWS_ACCESS_KEY_ID']}"
-    puts "[#OpenSearchClient.request] ENV['AWS_SECRET_ACCESS_KEY']: #{ENV['AWS_SECRET_ACCESS_KEY']}"
-    puts "[#OpenSearchClient.request] ENV['AWS_SESSION_TOKEN']: #{ENV['AWS_SESSION_TOKEN']}"
-
     # Signature Version 4
     signature = Aws::Sigv4::Signer.new(
       service: 'es',
@@ -62,7 +57,6 @@ class OpenSearchClient
 end
 
 def lambda_handler(event:, context:)
-  puts "[#lambda_handler] Received event: #{event}"
   count = 0
   opensearch_host = "https://search-lgtm-tonystrawberry-codes-7wakghxg7b6vvsfwyfkarv7htm.ap-northeast-1.es.amazonaws.com"
   index_name = "lgtm-images"

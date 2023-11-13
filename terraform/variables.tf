@@ -30,3 +30,9 @@ variable "unsplash_api_key" {
   description = "The Unsplash API key"
   type        = string
 }
+
+variable "opensearch_enabled" {
+  description = "Whether to enable OpenSearch"
+  type        = bool
+  default     = false
+}

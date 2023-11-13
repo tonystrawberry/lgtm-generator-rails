@@ -62,12 +62,12 @@ def lambda_handler(event:, context:)
       # Fetch the images by keywords with ElasticSearch
       url = "#{opensearch_host}/#{opensearch_index_name}/_search"
       uri = URI(url)
-      request = Net::HTTP::POST.new(uri)
+      request = Net::HTTP::Post.new(uri)
 
       body = {
         "query": {
           "fuzzy": {
-            "keywords": {
+            "labels.L.S": {
               "value": keywords,
               "fuzziness": 2
             }
@@ -80,8 +80,8 @@ def lambda_handler(event:, context:)
         service: 'es',
         region: 'ap-northeast-1',
         access_key_id: ENV['AWS_ACCESS_KEY_ID'],
-        secret_access_key: ENV['AWS_SECRET_ACCESS_KEY']
-        # session_token: ENV['AWS_SESSION_TOKEN']
+        secret_access_key: ENV['AWS_SECRET_ACCESS_KEY'],
+        session_token: ENV['AWS_SESSION_TOKEN']
       ).sign_request(
         http_method: 'POST',
         url: url,
@@ -89,6 +89,12 @@ def lambda_handler(event:, context:)
       )
 
       request.body = body
+      request['Host'] = signature.headers['host']
+      request['X-Amz-Date'] = signature.headers['x-amz-date']
+      request['X-Amz-Security-Token'] = signature.headers['x-amz-security-token']
+      request['X-Amz-Content-Sha256']= signature.headers['x-amz-content-sha256']
+      request['Authorization'] = signature.headers['authorization']
+      request['Content-Type'] = 'application/json'
 
       response = Net::HTTP.start(uri.host, uri.port, :use_ssl => true) do |http|
         http.request(request)
@@ -96,26 +102,29 @@ def lambda_handler(event:, context:)
 
       hits_ids = JSON.parse(response.body)['hits']['hits'].map { |hit| hit['_id'] }
 
-      # Fetch the images by IDs
-      request_items = {
-        table_name => {
-          keys: hits_ids.map do |id|
-            {
-              id: id,
-              source: 'giphy'
-            }
-          end
+      items = []
+      unless hits_ids.empty?
+        # Fetch the images by IDs
+        request_items = {
+          table_name => {
+            keys: hits_ids.map do |id|
+              {
+                id: id,
+                source: 'giphy'
+              }
+            end
+          }
         }
-      }
 
-      response = dynamodb.batch_get_item(request_items: request_items)
+        response = dynamodb.batch_get_item(request_items: request_items)
 
-      items = response.responses[table_name].map do |item|
-        {
-          id: item['id'],
-          keyword: item['keyword'],
-          image_url: "https://#{ENV["CLOUDFRONT_DISTRIBUTION_URL"]}/#{item['s3_key']}"
-        }
+        items = response.responses[table_name].map do |item|
+          {
+            id: item['id'],
+            keyword: item['keyword'],
+            image_url: "https://#{ENV["CLOUDFRONT_DISTRIBUTION_URL"]}/#{item['s3_key']}"
+          }
+        end
       end
 
       return {

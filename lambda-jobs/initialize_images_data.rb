@@ -37,11 +37,9 @@ while offset < 5000 do
     # Send the request and get the response
     response = http.request(request)
 
-    puts "[#process] Received response from API: #{response}"
-
     # Check if the response is successful (HTTP status 200)
     if !response.is_a?(Net::HTTPSuccess)
-      puts "Error: #{response.code} - #{response.message}"
+      puts "[#process] Error: #{response.code} - #{response.message}"
       return
     end
 

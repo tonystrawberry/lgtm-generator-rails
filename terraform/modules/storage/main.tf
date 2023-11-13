@@ -6,7 +6,7 @@ resource "aws_dynamodb_table" "aws_dynamodb_table" {
   range_key      = "source"
 
   stream_view_type = "NEW_AND_OLD_IMAGES"
-  stream_enabled = true
+  stream_enabled = var.opensearch_enabled ? true : false
 
   attribute {
     name = "id"

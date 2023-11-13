@@ -36,10 +36,13 @@ module "storage" {
   source = "./modules/storage"
 
   aws_cloudfront_distribution_arn = module.cloudfront.aws_cloudfront_distribution_arn
+  opensearch_enabled = var.opensearch_enabled
 }
 
 module "opensearch" {
   source = "./modules/opensearch"
+
+  count = var.opensearch_enabled ? 1 : 0
 
   dynamo_db_stream_arn = module.storage.dynamo_db_stream_arn
 }

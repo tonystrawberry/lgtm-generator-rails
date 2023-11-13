@@ -9,7 +9,7 @@ resource "aws_opensearch_domain" "lgtm_opensearch_aws_opensearch_domain" {
 
   advanced_security_options {
     enabled                        = true
-    anonymous_auth_enabled         = true
+    anonymous_auth_enabled         = false
     internal_user_database_enabled = true
 
     master_user_options {

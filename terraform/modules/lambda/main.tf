@@ -69,6 +69,13 @@ resource "aws_iam_policy" "lgtm_job_aws_iam_policy" {
             "dynamodb:*"
           ],
           "Resource": "arn:aws:dynamodb:*:*:*"
+        },
+        {
+          "Effect": "Allow",
+          "Action": [
+            "rekognition:*"
+          ],
+          "Resource": "*"
         }
       ]
 }
@@ -159,6 +166,14 @@ resource "aws_iam_policy" "lgtm_api_aws_iam_policy" {
           "dynamodb:*"
         ]
         Resource = "arn:aws:dynamodb:*:*:*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "es:ESHttpPost",
+          "es:ESHttpPut"
+        ],
+        Resource = "*"
       }
     ]
   })

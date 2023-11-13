@@ -26,11 +26,8 @@ module LambdaFunction
         # URL: https://api.giphy.com/v1/gifs/search?api_key=&q=lgtm&limit=50&offset=0&rating=g&lang=en&bundle=messaging_non_clips
         URI("https://api.giphy.com/v1/gifs/random?api_key=#{ENV["GIPHY_API_KEY"]}&tag=#{event['keyword']}")
       else
-        puts "[#process] Error: Invalid source"
         return { "success": false }
       end
-
-      puts "[#process] Sending request to URL: #{url}"
 
       # Create an HTTP client
       http = Net::HTTP.new(url.host, url.port)
@@ -42,15 +39,11 @@ module LambdaFunction
       # Send the request and get the response
       response = http.request(request)
 
-      puts "[#process] Received response from API: #{response}"
-
       # Check if the response is successful (HTTP status 200)
       if !response.is_a?(Net::HTTPSuccess)
-        puts "Error: #{response.code} - #{response.message}"
+        puts "[#process] Error: #{response.code} - #{response.message}"
         return
       end
-
-      puts "[#process] Parsing response from API"
 
       formatted_results = case event['source']
                         when 'giphy'
@@ -82,8 +75,6 @@ module LambdaFunction
                           return { "success": false }
                         end
 
-      puts "[#process] Formatted results: #{formatted_results}"
-
       formatted_results.each do |result|
         id = result["id"]
         url = result["url"]
@@ -102,8 +93,6 @@ module LambdaFunction
           puts "[#process] Image #{id} is already processed before, skipping..."
           next
         end
-
-        puts "[#process] Reading image from URL: #{url}"
 
         image_type = FastImage.type(url)
         img, original_img_first_frame, unedited_image_type = case image_type
@@ -197,6 +186,7 @@ module LambdaFunction
 
         # Upload the images (original and processed) to S3
         puts "[#process] Uploading image to S3"
+
         s3.put_object({
           bucket: "lgtm-tonystrawberry-codes",
           key: "lgtm/#{id}.#{image_type}",
@@ -211,8 +201,6 @@ module LambdaFunction
           content_type: "image/#{unedited_image_type}"
         })
 
-        puts "[#process] Image #{id} uploaded to S3"
-
         # Analyze the image using Rekognition
         puts "[#process] Analyzing image using Rekognition"
 
@@ -225,8 +213,6 @@ module LambdaFunction
           },
         })
 
-        puts "[#process] Labels: #{response.labels}"
-
         # Get the labels from the response (whose confidence is greater than 80%)
         labels = response.labels.map do |label|
           if label.confidence > 80
@@ -234,8 +220,9 @@ module LambdaFunction
           end
         end.compact
 
-        puts "[#process] Saving image info to DynamoDB"
         # Save the image info to DynamoDB
+        puts "[#process] Saving image info to DynamoDB"
+
         dynamodb.put_item({
           table_name: "lgtm-tonystrawberry-codes",
           item: {
