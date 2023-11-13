@@ -12,8 +12,9 @@ module LambdaFunction
   class Handler
     def self.process(event:, context:)
       # Create a DynamoDB client
-      dynamodb = Aws::DynamoDB::Client.new(region: 'ap-northeast-1')
-      s3 = Aws::S3::Client.new(region: 'ap-northeast-1')
+      dynamodb = Aws::DynamoDB::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
+      s3 = Aws::S3::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
+      rekognition = Aws::Rekognition::Client.new(region: 'ap-northeast-1', credentials: Aws::Credentials.new(ENV["AWS_ACCESS_KEY_ID"], ENV["AWS_SECRET_ACCESS_KEY"]))
 
       url = case event['source']
       when 'unsplash'
@@ -81,6 +82,8 @@ module LambdaFunction
                           return { "success": false }
                         end
 
+      puts "[#process] Formatted results: #{formatted_results}"
+
       formatted_results.each do |result|
         id = result["id"]
         url = result["url"]
@@ -103,7 +106,7 @@ module LambdaFunction
         puts "[#process] Reading image from URL: #{url}"
 
         image_type = FastImage.type(url)
-        img, original_img_first_frame = case image_type
+        img, original_img_first_frame, unedited_image_type = case image_type
         when :gif
           img = Magick::ImageList.new(url)
 
@@ -142,7 +145,17 @@ module LambdaFunction
             }
           end
 
-          [img, img.first]
+          # Get the first frame of the GIF
+          original_img_first_frame = Magick::ImageList.new(url).first
+          original_img_first_frame.resize_to_fill!(400, 300)
+          original_img_first_frame.format = "JPEG"
+
+          tempfile = Tempfile.new
+          original_img_first_frame.write(tempfile.path)
+
+          unedited_image_type = FastImage.type(tempfile.path)
+
+          [img, original_img_first_frame, unedited_image_type]
         when :jpeg, :png, :jpg
           # Read the image
           img = Magick::Image.read(url).first
@@ -172,7 +185,11 @@ module LambdaFunction
             options.fill = "white"
           }
 
-          [img, img]
+          # Get the image unedited
+          unedited_img = Magick::Image.read(url).first
+          unedited_img.resize_to_fill!(400, 300)
+
+          [img, unedited_img, image_type]
         else
           puts "[#process] Error: Invalid image type #{image_type}. Skipping..."
           next
@@ -191,12 +208,13 @@ module LambdaFunction
           bucket: "lgtm-tonystrawberry-codes",
           key: "lgtm/#{id}-original.jpg",
           body: original_img_first_frame.to_blob,
-          content_type: "image/jpeg"
+          content_type: "image/#{unedited_image_type}"
         })
+
+        puts "[#process] Image #{id} uploaded to S3"
 
         # Analyze the image using Rekognition
         puts "[#process] Analyzing image using Rekognition"
-        rekognition = Aws::Rekognition::Client.new(region: 'ap-northeast-1')
 
         response = rekognition.detect_labels({
           image: {
@@ -206,6 +224,8 @@ module LambdaFunction
             }
           },
         })
+
+        puts "[#process] Labels: #{response.labels}"
 
         # Get the labels from the response (whose confidence is greater than 80%)
         labels = response.labels.map do |label|
