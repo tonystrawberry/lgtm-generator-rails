@@ -42,7 +42,7 @@ jobs:
     defaults:
       run:
         working-directory: ./terraform
-    # needs: deploy-to-ecr # Wait for the deploy-to-ecr job to finish because we need the Docker image tag
+    needs: deploy-to-ecr # Wait for the deploy-to-ecr job to finish because we need the Docker image tag
     runs-on: ubuntu-latest
     steps:
     - name: Check out code
