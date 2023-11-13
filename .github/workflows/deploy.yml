@@ -72,8 +72,9 @@ jobs:
       working-directory: ./terraform/lambda-api
       run: bundle install --path vendor/bundle
 
-    - name: Install dependencies in `lambda-jobs`
-      working-directory: ./terraform/lambda-jobs
+    - name: Install dependencies in `lambda-opensearch` (optional)
+      if: ${{ github.event.inputs.opensearch_enabled == 'true' }}
+      working-directory: ./terraform/lambda-opensearch
       run: bundle install --path vendor/bundle
 
     - name: Terraform Apply
